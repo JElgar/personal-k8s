@@ -74,5 +74,21 @@
 - name: Install required software
   hosts: devmicrok8s 
   tasks:
-  - name: ping 
-    ping: 
+  - name: Update apt-get repo and cache
+    apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+
+  - name: Upgrade all apt packages
+    apt: upgrade=dist force_apt_get=yes
+
+  - name: install snap
+    apt: 
+      name: 
+        - snapd
+
+  - name: install microk8s 
+    snap: 
+      name: microk8s
+      classic: yes
+
+  - name: enable microk8s dns storage ingress dashboard
+    shell: microk8s.enable dns storage ingress dashboard

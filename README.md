@@ -10,7 +10,8 @@ Aim - Ansible this: https://community.hetzner.com/tutorials/create-microk8s-clus
 ` Include ~/.ssh/ansible/* `
 
 1. ansible-galaxy collection install hetzner.hcloud
-2. ansible-playbook microk8s-playbook.yml
+2. ansible-galaxy collection install community.kubernetes 
+3. ansible-playbook microk8s-playbook.yml
 
 
 

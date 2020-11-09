@@ -1,0 +1,38 @@
+- name: Install required software
+  hosts: localhost
+  tasks:
+  - name: install snap
+    apt: 
+      name: 
+        - snapd
+  - name: install hcloud
+    snap: 
+      name: hcloud
+      channel: latest/edge
+    become: true
+  - name: install hcloud-python 
+    pip: 
+      name: hcloud
+
+
+- name: Setup hetzner network and master node 
+  vars:
+    networkid: k8-network 
+    hcloud_token: "{{ lookup('env', 'HCLOUD_TOKEN') }}"
+  hosts: localhost
+  tasks:
+  - name: Create a basic network
+    hcloud_network:
+      api_token: "{{ hcloud_token }}"
+      name: "{{ networkid }}"
+      ip_range: 10.0.0.0/16
+      state: present
+  - name: Create a basic subnetwork
+    hcloud_subnetwork:
+      api_token: "{{ hcloud_token }}"
+      network: "{{ networkid }}"
+      ip_range: 10.0.0.0/24
+      network_zone: eu-central
+      type: server
+      state: present
+

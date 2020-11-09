@@ -1,0 +1,8 @@
+#jinja2:lstrip_blocks: True
+  
+Host {{ masterid }}
+  User root
+  IdentityFile {{ sshkey }}
+  Hostname {{ server.hcloud_server.ipv4_address }}
+  ServerAliveInterval 120
+  StrictHostKeyChecking no

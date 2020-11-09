@@ -1,0 +1,10 @@
+#jinja2:lstrip_blocks: True
+  
+{% for host in groups['devmicrok8s'] %}
+Host aws{{ loop.index }}
+  User ubuntu
+  IdentityFile {{ sshkey }}
+  Hostname {{ hostvars[host]['inventory_hostname'] }}
+  ServerAliveInterval 120
+ 
+{% endfor %} 

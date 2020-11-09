@@ -17,7 +17,10 @@
 
 - name: Setup hetzner network and master node 
   vars:
-    networkid: k8-network 
+    networkid: k8s-network 
+    masterid: k8s-master 
+    sshkey: jelgar@UbuntuPC
+    inventorygroup: devmicrok8s 
     hcloud_token: "{{ lookup('env', 'HCLOUD_TOKEN') }}"
   hosts: localhost
   tasks:
@@ -36,3 +39,40 @@
       type: server
       state: present
 
+  - name: Create a master server with ssh key
+    hcloud_server:
+      api_token: "{{ hcloud_token }}"
+      name: "{{ masterid }}"
+      server_type: cx11
+      image: ubuntu-20.04
+      location: nbg1
+      ssh_keys:
+        - "{{ sshkey }}"
+      state: present
+    register: server
+
+  - name: Add master node to network 
+    hcloud_server_network:
+      network: "{{ networkid }}"
+      server: "{{ masterid }}"
+      state: present
+
+  - name: Add server to inventory group
+    add_host:
+      hostname: '{{ server.hcloud_server.ipv4_address }}'
+      ansible_ssh_user: root
+      groups:
+      - "{{ inventorygroup }}"
+
+  - name: Creating local SSH config files
+    template:
+      src: templates/single_ssh_config_template.j2
+      dest: ~/.ssh/ansible/microk8s.conf
+      mode: 0644
+
+
+- name: Install required software
+  hosts: devmicrok8s 
+  tasks:
+  - name: ping 
+    ping: 

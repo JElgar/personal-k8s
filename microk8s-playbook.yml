@@ -21,6 +21,7 @@
     masterid: k8s-master 
     sshkey: jelgar@UbuntuPC
     inventorygroup: devmicrok8s 
+    masterinventorygroup: devmicrok8smaster
     hcloud_token: "{{ lookup('env', 'HCLOUD_TOKEN') }}"
   hosts: localhost
   tasks:
@@ -63,6 +64,7 @@
       ansible_ssh_user: root
       groups:
       - "{{ inventorygroup }}"
+      - "{{ masterinventorygroup }}"
 
   - name: Creating local SSH config files
     template:
@@ -89,6 +91,54 @@
     snap: 
       name: microk8s
       classic: yes
+  
+  - name: install kubectl 
+    snap: 
+      name: kubectl
+      classic: yes
+
+  - name: create .kube directory
+    file:
+      path: ~/.kube
+      state: directory
+  
+  - name: export microk8s kubectl config
+    shell: microk8s config > ~/.kube/config 
 
   - name: enable microk8s dns storage ingress dashboard
     shell: microk8s.enable dns storage ingress dashboard
+
+
+- name: Install metalb 
+  hosts: devmicrok8smaster
+  tasks:
+  - name: Instal metalb - 1
+    community.kubernetes.k8s:
+      src: https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/namespace.yaml 
+
+  - name: Apply metalb  - 2
+    community.kubernetes.k8s:
+      src: https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml 
+
+
+- name: Run microk8s service
+  hosts: devmicrok8smaster
+  tasks:
+  - name: copy over k8s basic web app yml
+    copy:
+      src: configs/sample-ingress.yml
+      dest: /tmp/sample-ingress.yml
+      mode: '0644'
+
+  - name: create basic web app 
+    shell: microk8s.kubectl run web --image=gcr.io/google-samples/hello-app:1.0 --port=8080 
+  
+  - name: expose basic web app 
+    shell: microk8s.kubectl expose deployment web --target-port=8080 --type=NodePort
+  
+  - name: apply ingress  controller
+    shell: microk8s.kubectl apply -f /tmp/simple-ingress.yaml
+
+
+
+
